@@ -16,6 +16,15 @@ class CreateObject(object):
                             iaa.AdditiveGaussianNoise(scale=(10, 60)),
                         ]) 
 
+
+        self.objects = {'circle': self.create_circle,
+                        'square': self.create_square,
+                        'hexagon': self.create_hex,
+                        'ellipse': self.create_ellipse,
+                        'capsule': self.create_capsule,
+                        'triangle': self.create_ellipse}
+
+
     def create_canvas(self, background-(255, 255, 255)):
         img = np.uint8(np.zeros((self.height, self.width, 3)))
         img[:,:, 0] = background[0]
@@ -121,7 +130,7 @@ class CreateObject(object):
     def create_ellipse(self, background=(255, 255, 255)):
 
         img = self.create_canvas(background)
-        
+
         major_axis = np.random.randint(0, self.max_object)
         minor_axis = np.random.randint(0, self.max_object)
 
@@ -138,3 +147,12 @@ class CreateObject(object):
                     color=color, 
                     thickness=-1)
         return img 
+
+
+    def sample(self, n = 100, type='circle', background=(255, 255, 255)):
+        if not (type in self.objects.keys()): 
+            raise ValueError('Unkown type found, allowed types: ', self.objects.keys())
+
+        objects = [self.objects[type] for _ in range(n)]
+        objects = self.transform(images = objects)
+        return objects
