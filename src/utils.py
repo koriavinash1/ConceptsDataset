@@ -16,10 +16,16 @@ class CreateObject(object):
                             iaa.AdditiveGaussianNoise(scale=(10, 60)),
                         ]) 
 
+    def create_canvas(self, background-(255, 255, 255)):
+        img = np.uint8(np.zeros((self.height, self.width, 3)))
+        img[:,:, 0] = background[0]
+        img[:,:, 1] = background[1]
+        img[:,:, 2] = background[2]
+        return img 
 
-    def create_square(self):
-        img = np.uint8(np.ones((self.height, self.width, 3)))
 
+    def create_square(self, background=(255, 255, 255)):
+        img = self.create_canvas(background)
         object_height = np.random.randint(0, self.max_object)
         object_width = np.random.randint(0, self.max_object)
 
@@ -34,8 +40,10 @@ class CreateObject(object):
         return img
 
 
-    def create_triangle(self):
-        img = np.uint8(np.ones((self.height, self.width, 3)))
+    def create_triangle(self, background=(255, 255, 255)):
+
+        img = self.create_canvas(background)
+
         p1  = (np.random.randint(-self.max_object, self.max_object), 
                         np.random.randint(-self.max_object, self.max_object))
         p2  = (np.random.randint(-self.max_object, self.max_object), 
@@ -57,8 +65,9 @@ class CreateObject(object):
         return img
 
 
-    def create_hex(self):
-        img = np.uint8(np.ones((self.height, self.width, 3)))
+    def create_hex(self, background=(255, 255, 255)):
+
+        img = self.create_canvas(background)
         side = 6
         sizex = np.random.randint(0, self.max_object)
         sizey = np.random.randint(0, self.max_object)
@@ -73,8 +82,9 @@ class CreateObject(object):
         return img
 
 
-    def create_circle(self):
-        img = np.uint8(np.ones((self.height, self.width, 3)))
+    def create_circle(self, background=(255, 255, 255)):
+        img = self.create_canvas(background)
+
         radius = np.random.randint(0, self.max_object)
         center = (self.height//2, self.width//2)
         color = tuple(np.random.randint(0, 255, 3))
@@ -82,7 +92,10 @@ class CreateObject(object):
         return img
 
 
-    def create_capsule(self):
+    def create_capsule(self, background=(255, 255, 255)):
+
+        img = self.create_canvas(background)
+
         img = np.uint8(np.ones((self.height, self.width, 3)))
         object_height = np.random.randint(0, self.max_object)
         object_width = np.random.randint(0, self.max_object)
@@ -105,8 +118,10 @@ class CreateObject(object):
         return img
 
 
-    def create_ellipse(self):
-        img = np.uint8(np.ones((self.height, self.width, 3)))
+    def create_ellipse(self, background=(255, 255, 255)):
+
+        img = self.create_canvas(background)
+        
         major_axis = np.random.randint(0, self.max_object)
         minor_axis = np.random.randint(0, self.max_object)
 
