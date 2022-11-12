@@ -11,13 +11,14 @@ class CreateObject(object):
     def __init__(self, height, width):
         self.height = height 
         self.width = width
+        self.min_object = self.height//10
         self.max_object = self.height//4
         self.transform = iaa.Sequential([
-                            iaa.Affine(rotate=(-180, 180),
-                                        translate_percent={"x": (-0.38, 0.38), "y": (-0.38, 0.38)},
+                            iaa.Affine(rotate=(-90, 90),
+                                        translate_percent=(-0.28, 0.28),
                                         shear=(-25, 25),
                                         mode='symmetric'),
-                            iaa.AdditiveGaussianNoise(scale=(10, 60)),
+                            iaa.AdditiveGaussianNoise(scale=(1, 1)),
                         ]) 
 
 
@@ -28,10 +29,10 @@ class CreateObject(object):
                         'octagon': self.create_polygon(8),
                         'ellipse': self.create_ellipse,
                         'capsule': self.create_capsule,
-                        'triangle': self.create_triangle}
+                        'triangle': self.create_polygon(3)}
 
 
-    def create_canvas(self, background=(255, 255, 255)):
+    def create_canvas(self, background=(0, 0, 0)):
         img = np.uint8(np.zeros((self.height, self.width, 3)))
         img[:,:, 0] = background[0]
         img[:,:, 1] = background[1]
@@ -40,9 +41,9 @@ class CreateObject(object):
 
 
     def create_square(self, background=(255, 255, 255)):
-        img = self.create_canvas(background)
-        object_height = np.random.randint(10, self.max_object)
-        object_width = np.random.randint(10, self.max_object)
+        img = self.create_canvas()
+        object_height = np.random.randint(self.min_object, self.max_object)
+        object_width = np.random.randint(self.min_object, self.max_object)
 
         start_point = (int(self.width//2 - object_width//2), int(self.height//2 - object_height//2))
         end_point = (int(self.width//2 + object_width//2), int(self.height//2 + object_height//2))
@@ -58,7 +59,7 @@ class CreateObject(object):
 
     def create_triangle(self, background=(255, 255, 255)):
 
-        img = self.create_canvas(background)
+        img = self.create_canvas()
 
         p1  = (np.random.randint(-self.max_object, self.max_object), 
                         np.random.randint(-self.max_object, self.max_object))
@@ -83,14 +84,16 @@ class CreateObject(object):
 
     def create_polygon(self, side=6):
         def create_object(background=(255, 255, 255)):
-            img = self.create_canvas(background)
-            sizex = np.random.randint(10, self.max_object)
-            sizey = np.random.randint(10, self.max_object)
+            img = self.create_canvas()
+            sizex = np.random.randint(self.min_object, self.max_object)
+            sizey = np.random.randint(self.min_object, self.max_object)
             points = [ (int((math.cos(th) + 1) * sizex), int((math.sin(th) + 1) * sizey))
                 for th in [i * (2 * math.pi) / side for i in range(side)]
                 ]  
-    
+
             contour = np.array(points)
+            contour[:, 0] += int(self.width//2 - self.max_object//2)
+            contour[:, 1] += int(self.height//2 - self.max_object//2)
             color = tuple([int(a) for a in np.random.randint(0, 255, 3)])
 
             cv2.drawContours(img, [contour], 0, color, -1)
@@ -99,9 +102,9 @@ class CreateObject(object):
 
 
     def create_circle(self, background=(255, 255, 255)):
-        img = self.create_canvas(background)
+        img = self.create_canvas()
 
-        radius = int(np.random.randint(10, self.max_object))
+        radius = int(np.random.randint(self.min_object, self.max_object))
         center = (int(self.height//2), int(self.width//2))
         color = tuple([int(a) for a in np.random.randint(0, 255, 3)])
         cv2.circle(img, center, radius, color, -1)
@@ -110,10 +113,10 @@ class CreateObject(object):
 
     def create_capsule(self, background=(255, 255, 255)):
 
-        img = self.create_canvas(background)
+        img = self.create_canvas()
 
-        object_height = np.random.randint(10, self.max_object)
-        object_width = np.random.randint(5, self.max_object)
+        object_height = np.random.randint(2*self.min_object, self.max_object)
+        object_width = np.random.randint(self.min_object, self.max_object)
 
         start_point = (int(self.width//2 - object_width//2), int(self.height//2 - object_height//2))
         end_point = (int(self.width//2 + object_width//2), int(self.height//2 + object_height//2))
@@ -135,10 +138,10 @@ class CreateObject(object):
 
     def create_ellipse(self, background=(255, 255, 255)):
 
-        img = self.create_canvas(background)
+        img = self.create_canvas()
 
-        major_axis = int(np.random.randint(10, self.max_object))
-        minor_axis = int(np.random.randint(5, self.max_object))
+        major_axis = int(np.random.randint(2*self.min_object, self.max_object))
+        minor_axis = int(np.random.randint(self.min_object, self.max_object))
 
         center = (int(self.height//2), int(self.width//2))
         axesLength = (major_axis, minor_axis)
@@ -157,13 +160,28 @@ class CreateObject(object):
         return img 
 
 
-    def sample(self, n = 100, type='circle', background=(255, 255, 255)):
+    def sample(self, n = 100, type='circle'):
         if not (type in self.objects.keys()): 
             raise ValueError('Unkown type found, allowed types: ', self.objects.keys())
 
-        objects = [self.objects[type](background) for _ in range(n)]
+        objects = [self.objects[type]() for _ in range(n)]
         objects = self.transform(images = objects)
-        return objects
+        return np.array(objects)
+
+    def combine(self, concepts,  background=(255, 255, 255)):
+        data = np.zeros_like(concepts[0])*1.0
+        data[..., 0] =  background[0]
+        data[..., 1] =  background[1]
+        data[..., 2] =  background[2]
+        N = len(concepts)
+        for iconcept in concepts:
+            data += iconcept*1.0/N
+
+        # data = np.clip(data, 0, 255)
+        # data = 255*(data - np.min(data))/(np.max(data) - np.min(data))
+        data = np.uint8(data)
+        return data 
+
 
 
 def show_image(images, 
