@@ -50,7 +50,7 @@ class CreateDataset(object):
 
     def create(self):
         for ibatch in range(self.Ndatapoints//self.batch_size):
-            background = tuple([int(a) for a in np.random.randint(50, 255, 3)])
+            background = tuple([int(a) for a in np.random.randint(0, 50, 3)])
             classes = self.sample_objects()
 
             for key, concepts in classes.items():

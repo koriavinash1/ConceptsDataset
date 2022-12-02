@@ -53,7 +53,7 @@ class CreateObject(object):
 
         start_point = (int(self.width//2 - object_width//2), int(self.height//2 - object_height//2))
         end_point = (int(self.width//2 + object_width//2), int(self.height//2 + object_height//2))
-        color = tuple([int(a) for a in np.random.randint(150, 255, 3)])
+        color = tuple([int(a) for a in np.random.randint(200, 255, 3)])
 
         img = cv2.rectangle(img, 
                 start_point, 
@@ -82,7 +82,7 @@ class CreateObject(object):
 
 
         triangle_contour = np.array([p1, p2, p3])
-        color = tuple([int(a) for a in np.random.randint(150, 255, 3)])
+        color = tuple([int(a) for a in np.random.randint(200, 255, 3)])
 
         cv2.drawContours(img, [triangle_contour], 0, color, -1)
         return img
@@ -100,7 +100,7 @@ class CreateObject(object):
             contour = np.array(points)
             contour[:, 0] += int(self.width//2 - self.max_object//2)
             contour[:, 1] += int(self.height//2 - self.max_object//2)
-            color = tuple([int(a) for a in np.random.randint(150, 255, 3)])
+            color = tuple([int(a) for a in np.random.randint(200, 255, 3)])
 
             cv2.drawContours(img, [contour], 0, color, -1)
             return img
@@ -112,7 +112,7 @@ class CreateObject(object):
 
         radius = int(np.random.randint(self.min_object, self.max_object))
         center = (int(self.height//2), int(self.width//2))
-        color = tuple([int(a) for a in np.random.randint(150, 255, 3)])
+        color = tuple([int(a) for a in np.random.randint(200, 255, 3)])
         cv2.circle(img, center, radius, color, -1)
         return img
 
@@ -126,7 +126,7 @@ class CreateObject(object):
 
         start_point = (int(self.width//2 - object_width//2), int(self.height//2 - object_height//2))
         end_point = (int(self.width//2 + object_width//2), int(self.height//2 + object_height//2))
-        color = tuple([int(a) for a in np.random.randint(150, 255, 3)])
+        color = tuple([int(a) for a in np.random.randint(200, 255, 3)])
         img = cv2.rectangle(img, 
                 pt1=start_point, 
                 pt2=end_point, 
@@ -153,7 +153,7 @@ class CreateObject(object):
         axesLength = (major_axis, minor_axis)
         
         angle = int(np.random.uniform(0, 360))
-        color = tuple([int(a) for a in np.random.randint(150, 255, 3)])
+        color = tuple([int(a) for a in np.random.randint(200, 255, 3)])
 
         cv2.ellipse(img, 
                     center, 
@@ -187,13 +187,10 @@ class CreateObject(object):
         N = concepts.shape[1]
         for bi, iconcept in enumerate(concepts):
             np.random.shuffle(translate_order)
-            combined = np.zeros_like(iconcept[0])
             for i, concept in enumerate(iconcept):
-                combined_ = self.translate[translate_order[i]](image = concept)
-                combined = combined*(combined_ < 10) + combined_
-
-            combined = self.noise_aug(image = np.uint8(combined))
-            data[bi, ...] = data[bi, ...]*(combined < 10) + combined
+                data[bi, ...] += self.translate[translate_order[i]](image = concept)
+            
+            data[bi, ...] = self.noise_aug(image = np.uint8(data[bi, ...]))
             data[bi, ...] = 255*(data[bi, ...] - np.min(data[bi, ...]))/(np.max(data[bi, ...]) - np.min(data[bi, ...]))
 
         # data = np.clip(data, 0, 255)
